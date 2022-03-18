@@ -114,17 +114,13 @@ export function move(instructions: string, obstacles: Position[]): string {
     hasCrashed: false,
   };
 
+  const commandMap:Record<string, Command> = {
+    'R': turnRightCommand,
+    "L":turnLeftCommand,
+    "M":moveForwardCommand
+  }
   const commands = instructions.split("").map((instruction) => {
-    switch (instruction) {
-      case "R":
-        return turnRightCommand(obstacles);
-      case "L":
-        return turnLeftCommand(obstacles);
-      case "M":
-        return moveForwardCommand(obstacles);
-      default:
-        throw new Error(`instruction ${instruction} not recognised`);
-    }
+    return commandMap[instruction](obstacles)
   });
 
   for (const command of commands) {
