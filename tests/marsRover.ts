@@ -10,46 +10,63 @@ enum Direction {
   WEST = "W",
 }
 
-function turnRight(direction: Direction): Direction {
-  if (direction === Direction.NORTH) {
-    return Direction.EAST;
+type Rover = {
+  position: Position;
+  direction: Direction;
+};
+
+function turnRight(rover: Rover): Rover {
+  if (rover.direction === Direction.NORTH) {
+    return { ...rover, direction: Direction.EAST };
   }
-  if (direction === Direction.EAST) {
-    return Direction.SOUTH;
+  if (rover.direction === Direction.EAST) {
+    return { ...rover, direction: Direction.SOUTH };
   }
-  if (direction === Direction.SOUTH) {
-    return Direction.WEST;
+  if (rover.direction === Direction.SOUTH) {
+    return { ...rover, direction: Direction.WEST };
   }
 
-  return Direction.NORTH;
+  return { ...rover, direction: Direction.NORTH };
 }
 
-function turnLeft(direction: Direction): Direction {
-  return turnRight(turnRight(turnRight(direction)));
+function turnLeft(rover: Rover): Rover {
+  return turnRight(turnRight(turnRight(rover)));
 }
 
-function moveForward(position: Position, direction: Direction): Position {
-  if (direction === Direction.NORTH) {
+function moveForward(rover: Rover): Rover {
+  if (rover.direction === Direction.NORTH) {
     return {
-      x: position.x,
-      y: (position.y + 1) % 10,
+      ...rover,
+      position: {
+        x: rover.position.x,
+        y: (rover.position.y + 1) % 10,
+      },
     };
   }
-  if (direction === Direction.WEST) {
+  if (rover.direction === Direction.WEST) {
     return {
-      x: (position.x + 9) % 10,
-      y: position.y,
+      ...rover,
+      position: {
+        x: (rover.position.x + 9) % 10,
+        y: rover.position.y,
+      },
     };
   }
-  if (direction === Direction.SOUTH) {
+  if (rover.direction === Direction.SOUTH) {
     return {
-      x: position.x,
-      y: (position.y + 9) % 10,
+      ...rover,
+      position: {
+        x: rover.position.x,
+        y: (rover.position.y + 9) % 10,
+      },
     };
   }
   return {
-    x: (position.x + 1) % 10,
-    y: position.y,
+    ...rover,
+    position: {
+      x: (rover.position.x + 1) % 10,
+      y: rover.position.y,
+    },
   };
 }
 
@@ -58,24 +75,23 @@ function hasObstacleAtPosition({ x, y }: Position, obstacles: Position[]) {
 }
 
 export function move(instructions: string, obstacles: Position[]): string {
-  let direction: Direction = Direction.NORTH;
-  let position: Position = { x: 0, y: 0 };
+  let rover: Rover = { position: { x: 0, y: 0 }, direction: Direction.NORTH };
 
   for (const instruction of instructions) {
     if (instruction === "R") {
-      direction = turnRight(direction);
+      rover = turnRight(rover);
     } else if (instruction === "L") {
-      direction = turnLeft(direction);
+      rover = turnLeft(rover);
     } else {
-      const nextPosition = moveForward(position, direction);
+      const nextRover = moveForward(rover);
 
-      if (hasObstacleAtPosition(nextPosition, obstacles)) {
-        return `O:${position.x}:${position.y}:${direction}`;
+      if (hasObstacleAtPosition(nextRover.position, obstacles)) {
+        return `O:${rover.position.x}:${rover.position.y}:${rover.direction}`;
       }
 
-      position = nextPosition;
+      rover = nextRover;
     }
   }
 
-  return `${position.x}:${position.y}:${direction}`;
+  return `${rover.position.x}:${rover.position.y}:${rover.direction}`;
 }
