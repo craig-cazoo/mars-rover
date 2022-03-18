@@ -108,5 +108,17 @@ describe("mars rover", () => {
 
       expect(move("MMMM", obstacleRepository)).toBe("O:0:2:N");
     });
+
+    test("should not be able to turn right after hitting an obstacle", () => {
+      const obstacleRepository: Position[] = [{ x: 0, y: 1 }];
+
+      expect(move("MMR", obstacleRepository)).toBe("O:0:0:N");
+    });
+
+    test("should not be able to turn left after hitting an obstacle", () => {
+      const obstacleRepository: Position[] = [{ x: 0, y: 1 }];
+
+      expect(move("MML", obstacleRepository)).toBe("O:0:0:N");
+    });
   });
 });
