@@ -17,9 +17,10 @@ type Rover = {
   hasCrashed: boolean;
 };
 
-type Command = (obstacles: Position[]) => (rover: Rover) => Rover;
+type Command = (rover: Rover) => Rover;
+type CommandFactory = (obstacles: Position[]) => Command;
 
-const turnRightCommand: Command = (_obstacles) => (rover) => {
+const turnRightCommand: CommandFactory = (_obstacles) => (rover) => {
   if (rover.hasCrashed) {
     return rover;
   }
@@ -37,13 +38,13 @@ const turnRightCommand: Command = (_obstacles) => (rover) => {
   return { ...rover, direction: Direction.NORTH };
 };
 
-const turnLeftCommand: Command = (obstacles) => (rover) => {
+const turnLeftCommand: CommandFactory = (obstacles) => (rover) => {
   const turnRight = turnRightCommand(obstacles);
 
   return turnRight(turnRight(turnRight(rover)));
 };
 
-const moveForwardCommand: Command = (obstacles) => {
+const moveForwardCommand: CommandFactory = (obstacles) => {
   function moveForward(rover: Rover): Rover {
     if (rover.direction === Direction.NORTH) {
       return {
@@ -81,6 +82,10 @@ const moveForwardCommand: Command = (obstacles) => {
     };
   }
 
+  function hasObstacleAtPosition({ x, y }: Position, obstacles: Position[]) {
+    return obstacles.some((obstacle) => obstacle.x === x && obstacle.y === y);
+  }
+
   return (rover) => {
     const nextRover = moveForward(rover);
 
@@ -95,9 +100,7 @@ const moveForwardCommand: Command = (obstacles) => {
   };
 };
 
-function hasObstacleAtPosition({ x, y }: Position, obstacles: Position[]) {
-  return obstacles.some((obstacle) => obstacle.x === x && obstacle.y === y);
-}
+const undoCommand: CommandFactory = (_obstacles) => (rover) => rover;
 
 function printRover(rover: Rover) {
   if (rover.hasCrashed) {
@@ -114,18 +117,17 @@ export function move(instructions: string, obstacles: Position[]): string {
     hasCrashed: false,
   };
 
-  const commandMap:Record<string, Command> = {
-    'R': turnRightCommand,
-    "L":turnLeftCommand,
-    "M":moveForwardCommand
-  }
-  const commands = instructions.split("").map((instruction) => {
-    return commandMap[instruction](obstacles)
-  });
+  const commandMap: Record<string, Command> = {
+    R: turnRightCommand(obstacles),
+    L: turnLeftCommand(obstacles),
+    M: moveForwardCommand(obstacles),
+    U: undoCommand(obstacles),
+  };
 
-  for (const command of commands) {
-    rover = command(rover);
-  }
+  rover = instructions
+    .split("")
+    .map((instruction) => commandMap[instruction])
+    .reduce((r, command) => command(r), rover);
 
   return printRover(rover);
 }

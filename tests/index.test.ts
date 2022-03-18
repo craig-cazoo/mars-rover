@@ -121,4 +121,13 @@ describe("mars rover", () => {
       expect(move("MML", obstacleRepository)).toBe("O:0:0:N");
     });
   });
+
+  describe("undo", () => {
+    test.each`
+      instructions | expectedPosition
+      ${"MU"}      | ${"0:0:N"}
+    `(`should undo`, ({ instructions, expectedPosition }) => {
+      expect(move(instructions, [])).toBe(expectedPosition);
+    });
+  });
 });
